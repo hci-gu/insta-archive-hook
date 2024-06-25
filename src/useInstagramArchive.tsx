@@ -28,9 +28,12 @@ const getAccountCreationDate = async (tree: any): Promise<Date> => {
   return new Date(text)
 }
 
-const postElementToPost = async (fileTree: any, el: Element): Promise<Post> => {
+const postElementToPost = async (
+  fileTree: any,
+  el: Element
+): Promise<Post | null> => {
   let caption = ''
-  let timestamp = new Date()
+  let timestamp
   let media: any = []
   const captionEl = el.children[0] as any
   if (captionEl) {
@@ -51,7 +54,9 @@ const postElementToPost = async (fileTree: any, el: Element): Promise<Post> => {
     )
   }
 
-  //   console.log(el)
+  if (!timestamp || !caption) {
+    return null
+  }
 
   return {
     timestamp,
@@ -71,10 +76,11 @@ const postsFromTree = async (tree: any): Promise<Post[]> => {
       .toArray()
       .map((e) => postElementToPost(tree, e))
   )
+  const postsFiltered = posts.filter((p) => p !== null) as Post[]
 
-  posts.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+  postsFiltered.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 
-  return posts
+  return postsFiltered
 }
 
 const archiveFromTree = async (tree: any): Promise<InstagramArchive> => {
@@ -95,7 +101,6 @@ function useInstagramArchive(): UseInstagramArchiveReturn {
 
     fileTreeFromZip(file).then(async (fileTree) => {
       const archive = await archiveFromTree(fileTree)
-      console.log(fileTree)
       setArchive(archive)
     })
   }, [file, setArchive])
