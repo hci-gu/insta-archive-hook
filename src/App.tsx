@@ -1,34 +1,28 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import UploadInstagramArchive from './UploadInstagramArchive'
+import useInstagramArchive, { InstagramArchive } from './useInstagramArchive'
 
-function App() {
-  const [count, setCount] = useState(0)
-
+const Displayer = ({ archive }: { archive: InstagramArchive | undefined }) => {
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <h2>Archive</h2>
+      <pre key={`${archive}`}>{JSON.stringify(archive, null, 2)}</pre>
     </>
+  )
+}
+
+function App() {
+  const [archive, setFile] = useInstagramArchive()
+
+  return (
+    <div
+      style={{
+        margin: 'auto',
+        width: '70%',
+      }}
+    >
+      <UploadInstagramArchive setFile={setFile} />
+      <Displayer archive={archive} />
+    </div>
   )
 }
 
