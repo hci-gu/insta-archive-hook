@@ -41,13 +41,11 @@ export const fileTreeFromZip = async (file: File) => {
   if (Object.keys(root).length === 1) {
     root = root[Object.keys(root)[0]]
   }
-  console.log(root)
 
   return root
 }
 
 export const htmlForPath = async (fileTree: any, path: string) => {
-  console.log(fileTree)
   const data = eval(`fileTree.${path}`)
 
   // need a writer to read the data
@@ -59,20 +57,25 @@ export const htmlForPath = async (fileTree: any, path: string) => {
   return $html
 }
 
-export const imageForPath = async (fileTree: any, path: string) => {
-  const keys = path.split('/')
-  let currentLevel = fileTree
-  for (const key of keys) {
-    currentLevel = currentLevel[key]
-  }
+export const mediaForPath = async (fileTree: any, path: string) => {
+  try {
+    const keys = path.split('/')
+    let currentLevel = fileTree
+    for (const key of keys) {
+      currentLevel = currentLevel[key]
+    }
 
-  if (!currentLevel) {
-    console.log(path)
-    return null
-  }
+    if (!currentLevel) {
+      return null
+    }
 
-  const writer = new zip.BlobWriter()
-  const blob = await currentLevel.getData(writer)
+    const writer = new zip.BlobWriter()
+    const blob = await currentLevel.getData(writer)
 
-  return URL.createObjectURL(blob)
+    return URL.createObjectURL(blob)
+  } catch (e) {}
 }
+
+// export const videoForPath = async (fileTree: any, path: string) => {
+
+// }
