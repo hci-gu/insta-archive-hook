@@ -45,6 +45,7 @@ export const fileTreeFromZip = async (file: File) => {
   return root
 }
 
+// @ts-ignore
 export const htmlForPath = async (fileTree: any, path: string) => {
   const data = eval(`fileTree.${path}`)
 
