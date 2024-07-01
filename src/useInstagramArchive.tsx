@@ -31,7 +31,7 @@ type Interaction = {
 type Profile = {
   profilePictures: {
     timestamp: Date
-    url: string
+    media: string
   }[]
   bio: {
     timestamp: Date
@@ -211,7 +211,7 @@ const profilefromTree = async (tree: any): Promise<Profile> => {
     if (src) {
       profilePictures.push({
         timestamp: new Date(0),
-        url: src,
+        media: (await mediaForPath(tree, src)) ?? '',
       })
     }
   }
