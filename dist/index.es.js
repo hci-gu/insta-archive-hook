@@ -20488,12 +20488,15 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
   try {
     const s = n.split("/");
     let a = t;
-    for (const u of s)
-      a = a[u];
+    for (const d of s)
+      a = a[d];
     if (!a)
       return null;
-    const i = new BlobWriter(), o = await a.getData(i);
-    return URL.createObjectURL(o);
+    const i = new BlobWriter(), u = a.filename.split(".").pop();
+    let c = "image/jpeg";
+    u === "mp4" && (c = "video/mp4");
+    const l = await a.getData(i);
+    return URL.createObjectURL(new Blob([l], { type: c }));
   } catch {
   }
 }, getAccountCreationDate = async (t) => {
