@@ -8,11 +8,16 @@ enum ActivityType {
   Reel = 'Reel',
 }
 
+type Media = {
+  url: string
+  type: string
+}
+
 type Activity = {
   type: ActivityType
   timestamp: Date
   caption: string
-  media: []
+  media: Media[]
 }
 
 enum InteractionType {
@@ -211,7 +216,7 @@ const profilefromTree = async (tree: any): Promise<Profile> => {
     if (src) {
       profilePictures.push({
         timestamp: new Date(0),
-        media: (await mediaForPath(tree, src)) ?? '',
+        media: (await mediaForPath(tree, src))?.url ?? '',
       })
     }
   }

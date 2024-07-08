@@ -73,14 +73,19 @@ export const mediaForPath = async (fileTree: any, path: string) => {
     const writer = new zip.BlobWriter()
     const fileName = currentLevel.filename
     const extension = fileName.split('.').pop()
+    let type = 'image'
     let mimeType = 'image/jpeg'
     if (extension === 'mp4') {
       mimeType = 'video/mp4'
+      type = 'video'
     }
 
     const blob = await currentLevel.getData(writer)
 
-    return URL.createObjectURL(new Blob([blob], { type: mimeType }))
+    return {
+      url: URL.createObjectURL(new Blob([blob], { type: mimeType })),
+      type,
+    }
   } catch (e) {}
 }
 

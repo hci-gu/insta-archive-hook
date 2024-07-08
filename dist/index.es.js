@@ -20488,15 +20488,18 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
   try {
     const s = n.split("/");
     let a = t;
-    for (const d of s)
-      a = a[d];
+    for (const f of s)
+      a = a[f];
     if (!a)
       return null;
     const i = new BlobWriter(), u = a.filename.split(".").pop();
-    let c = "image/jpeg";
-    u === "mp4" && (c = "video/mp4");
-    const l = await a.getData(i);
-    return URL.createObjectURL(new Blob([l], { type: c }));
+    let c = "image", l = "image/jpeg";
+    u === "mp4" && (l = "video/mp4", c = "video");
+    const d = await a.getData(i);
+    return {
+      url: URL.createObjectURL(new Blob([d], { type: l })),
+      type: c
+    };
   } catch {
   }
 }, getAccountCreationDate = async (t) => {
@@ -20574,22 +20577,23 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
     n(".uiBoxWhite").toArray().map((i) => storyElementToStory(t, i))
   )).filter((i) => i !== null);
 }, profilefromTree = async (t) => {
+  var u;
   const n = await htmlForPath(
     t,
     'personal_information.personal_information["personal_information.html"]'
   );
   let s = "", a = [];
   const i = n("tr").toArray();
-  for (const u of i) {
-    const l = n(u).find("td").text();
-    l.includes("Username") && (s = l.replace("Username", ""));
+  for (const c of i) {
+    const d = n(c).find("td").text();
+    d.includes("Username") && (s = d.replace("Username", ""));
   }
   const o = n("a > img").toArray();
-  for (const u of o) {
-    const c = u.attribs.src;
-    c && a.push({
+  for (const c of o) {
+    const l = c.attribs.src;
+    l && a.push({
       timestamp: /* @__PURE__ */ new Date(0),
-      media: await mediaForPath(t, c) ?? ""
+      media: ((u = await mediaForPath(t, l)) == null ? void 0 : u.url) ?? ""
     });
   }
   return {

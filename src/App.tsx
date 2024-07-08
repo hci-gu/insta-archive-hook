@@ -2,6 +2,8 @@ import UploadInstagramArchive from './UploadInstagramArchive'
 import useInstagramArchive, { InstagramArchive } from './useInstagramArchive'
 
 const Displayer = ({ archive }: { archive: InstagramArchive | undefined }) => {
+  // const parts = archive?.activities.filter((a) => a.type === 'Story')
+
   return (
     <>
       <h2>Archive</h2>
