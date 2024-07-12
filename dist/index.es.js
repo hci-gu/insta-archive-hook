@@ -20524,6 +20524,25 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
     s = new Date(o.data);
   }
   return { username: n, timestamp: s };
+}, commentFromElement = (t) => {
+  const n = t.children[0].children[1];
+  if (!n)
+    return null;
+  const s = n.children[0];
+  let a = "", i = "", o = /* @__PURE__ */ new Date();
+  const u = s.children[0];
+  u && (a = u.children[0].children[1].children[0].children[0].data);
+  let c = s.children.length === 3;
+  if (c) {
+    const d = s.children[1];
+    d && (i = d.children[0].children[1].children[0].data);
+  }
+  const l = n.children[c ? 2 : 1];
+  if (l) {
+    const d = l.children[0].children[1].children[0].data;
+    o = new Date(d.data);
+  }
+  return { username: i, timestamp: o, content: a };
 }, postElementToPost = async (t, n) => {
   const { caption: s, timestamp: a } = captionAndTimeStampFromElement(n);
   if (!a || !s)
@@ -20625,11 +20644,35 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
     onType: "Comment"
     /* Comment */
   };
-}), interactionsFromTree = async (t) => {
-  const n = await likedPostsFromTree(t), a = [...await likedCommentsFromTree(t), ...n].filter(
-    (i) => i.timestamp
+}), commentsFromTree = async (t) => {
+  const n = t.your_instagram_activity.comments;
+  let s = [];
+  for (const a in n) {
+    const o = (await htmlForPath(
+      t,
+      `your_instagram_activity.comments["${a}"]`
+    ))(".uiBoxWhite").toArray().map((u) => {
+      const c = commentFromElement(u);
+      return c ? {
+        type: "Comment",
+        timestamp: c.timestamp,
+        mediaOwner: c.username,
+        onType: "Comment",
+        content: c.content
+      } : null;
+    }).filter((u) => u !== null);
+    s = s.concat(o);
+  }
+  return s;
+}, interactionsFromTree = async (t) => {
+  const [n, s, a] = await Promise.all([
+    likedPostsFromTree(t),
+    likedCommentsFromTree(t),
+    commentsFromTree(t)
+  ]), i = [...s, ...n, ...a].filter(
+    (o) => o.timestamp
   );
-  return a.sort((i, o) => o.timestamp.getTime() - i.timestamp.getTime()), a;
+  return i.sort((o, u) => u.timestamp.getTime() - o.timestamp.getTime()), i;
 }, archiveFromTree = async (t) => {
   const [n, s, a, i, o] = await Promise.all([
     getAccountCreationDate(t),

@@ -31,6 +31,7 @@ type Interaction = {
   onType: ActivityType | InteractionType
   timestamp: Date
   mediaOwner: string
+  content?: string
 }
 
 type Profile = {
@@ -96,6 +97,40 @@ const usernameAndTimestampFromElement = (el: Element) => {
   }
 
   return { username, timestamp }
+}
+
+const commentFromElement = (el: Element) => {
+  const table = (el.children[0] as Element).children[1] as Element
+
+  if (!table) {
+    return null
+  }
+
+  const tbody = table.children[0] as Element
+
+  let content = ''
+  let username = ''
+  let timestamp = new Date()
+  const contentEl = tbody.children[0] as any
+  if (contentEl) {
+    content = contentEl.children[0].children[1].children[0].children[0].data
+  }
+
+  let usernameExists = tbody.children.length === 3
+
+  if (usernameExists) {
+    const usernameEl = tbody.children[1] as any
+    if (usernameEl) {
+      username = usernameEl.children[0].children[1].children[0].data
+    }
+  }
+  const timestampEl = table.children[usernameExists ? 2 : 1] as any
+  if (timestampEl) {
+    const nestedChild = timestampEl.children[0].children[1].children[0].data
+    timestamp = new Date(nestedChild.data)
+  }
+
+  return { username, timestamp, content }
 }
 
 const postElementToPost = async (
@@ -268,11 +303,51 @@ const likedCommentsFromTree = async (tree: any): Promise<Interaction[]> => {
   return likedComments
 }
 
-const interactionsFromTree = async (tree: any): Promise<Interaction[]> => {
-  const likedPosts = await likedPostsFromTree(tree)
-  const likedComments = await likedCommentsFromTree(tree)
+// const commentsForHtmlPath = async (
+//   tree: any,
+//   path: string
+// ): Promise<Interaction[]> => {}
 
-  const interactions = [...likedComments, ...likedPosts].filter(
+const commentsFromTree = async (tree: any): Promise<Interaction[]> => {
+  const commentsObj = tree['your_instagram_activity']['comments']
+  let comments: Interaction[] = []
+  for (const key in commentsObj) {
+    const $html = await htmlForPath(
+      tree,
+      `your_instagram_activity.comments["${key}"]`
+    )
+    const _comments = (
+      $html('.uiBoxWhite')
+        .toArray()
+        .map((el) => {
+          const commentData = commentFromElement(el)
+          if (!commentData) {
+            return null
+          }
+
+          return {
+            type: InteractionType.Comment,
+            timestamp: commentData.timestamp,
+            mediaOwner: commentData.username,
+            onType: InteractionType.Comment,
+            content: commentData.content,
+          }
+        }) as any[]
+    ).filter((c) => c !== null) as Interaction[]
+    comments = comments.concat(_comments)
+  }
+
+  return comments
+}
+
+const interactionsFromTree = async (tree: any): Promise<Interaction[]> => {
+  const [likedPosts, likedComments, comments] = await Promise.all([
+    likedPostsFromTree(tree),
+    likedCommentsFromTree(tree),
+    commentsFromTree(tree),
+  ])
+
+  const interactions = [...likedComments, ...likedPosts, ...comments].filter(
     (i) => i.timestamp
   )
   interactions.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
