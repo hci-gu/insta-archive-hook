@@ -99,6 +99,22 @@ const usernameAndTimestampFromElement = (el: Element) => {
   return { username, timestamp }
 }
 
+const usernameAndTimestampFromStoryLikeElement = (el: Element) => {
+  let username = ''
+  let timestamp
+  const usernameEl = el.children[0] as any
+  if (usernameEl) {
+    username = usernameEl.children[0].data
+  }
+  const timestampEl = el.children[1] as any
+  if (timestampEl) {
+    const nestedChild = timestampEl.children[0].children[0].children[0]
+    timestamp = new Date(nestedChild.data)
+  }
+
+  return { username, timestamp }
+}
+
 const commentFromElement = (el: Element) => {
   const table = (el.children[0] as Element).children[1] as Element
 
@@ -283,6 +299,27 @@ const likedPostsFromTree = async (tree: any): Promise<Interaction[]> => {
   return likedPosts
 }
 
+const likedStoriesFromTree = async (tree: any): Promise<Interaction[]> => {
+  const $html = await htmlForPath(
+    tree,
+    'your_instagram_activity.story_sticker_interactions["story_likes.html"]'
+  )
+  const likedStories = $html('.uiBoxWhite')
+    .toArray()
+    .map((el) => {
+      const { username, timestamp } =
+        usernameAndTimestampFromStoryLikeElement(el)
+      return {
+        type: InteractionType.Like,
+        timestamp,
+        mediaOwner: username,
+        onType: ActivityType.Story,
+      }
+    }) as Interaction[]
+
+  return likedStories
+}
+
 const likedCommentsFromTree = async (tree: any): Promise<Interaction[]> => {
   const $html = await htmlForPath(
     tree,
@@ -341,15 +378,21 @@ const commentsFromTree = async (tree: any): Promise<Interaction[]> => {
 }
 
 const interactionsFromTree = async (tree: any): Promise<Interaction[]> => {
-  const [likedPosts, likedComments, comments] = await Promise.all([
-    likedPostsFromTree(tree),
-    likedCommentsFromTree(tree),
-    commentsFromTree(tree),
-  ])
-
-  const interactions = [...likedComments, ...likedPosts, ...comments].filter(
-    (i) => i.timestamp
+  const [likedPosts, likedStories, likedComments, comments] = await Promise.all(
+    [
+      likedPostsFromTree(tree),
+      likedStoriesFromTree(tree),
+      likedCommentsFromTree(tree),
+      commentsFromTree(tree),
+    ]
   )
+
+  const interactions = [
+    ...likedComments,
+    ...likedStories,
+    ...likedPosts,
+    ...comments,
+  ].filter((i) => i.timestamp)
   interactions.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 
   return interactions

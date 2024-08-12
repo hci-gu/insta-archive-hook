@@ -20524,6 +20524,16 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
     s = new Date(o.data);
   }
   return { username: n, timestamp: s };
+}, usernameAndTimestampFromStoryLikeElement = (t) => {
+  let n = "", s;
+  const a = t.children[0];
+  a && (n = a.children[0].data);
+  const i = t.children[1];
+  if (i) {
+    const o = i.children[0].children[0].children[0];
+    s = new Date(o.data);
+  }
+  return { username: n, timestamp: s };
 }, commentFromElement = (t) => {
   const n = t.children[0].children[1];
   if (!n)
@@ -20632,6 +20642,18 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
     onType: "Post"
     /* Post */
   };
+}), likedStoriesFromTree = async (t) => (await htmlForPath(
+  t,
+  'your_instagram_activity.story_sticker_interactions["story_likes.html"]'
+))(".uiBoxWhite").toArray().map((a) => {
+  const { username: i, timestamp: o } = usernameAndTimestampFromStoryLikeElement(a);
+  return {
+    type: "Like",
+    timestamp: o,
+    mediaOwner: i,
+    onType: "Story"
+    /* Story */
+  };
 }), likedCommentsFromTree = async (t) => (await htmlForPath(
   t,
   'your_instagram_activity.likes["liked_comments.html"]'
@@ -20665,14 +20687,20 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
   }
   return s;
 }, interactionsFromTree = async (t) => {
-  const [n, s, a] = await Promise.all([
-    likedPostsFromTree(t),
-    likedCommentsFromTree(t),
-    commentsFromTree(t)
-  ]), i = [...s, ...n, ...a].filter(
-    (o) => o.timestamp
-  );
-  return i.sort((o, u) => u.timestamp.getTime() - o.timestamp.getTime()), i;
+  const [n, s, a, i] = await Promise.all(
+    [
+      likedPostsFromTree(t),
+      likedStoriesFromTree(t),
+      likedCommentsFromTree(t),
+      commentsFromTree(t)
+    ]
+  ), o = [
+    ...a,
+    ...s,
+    ...n,
+    ...i
+  ].filter((u) => u.timestamp);
+  return o.sort((u, c) => c.timestamp.getTime() - u.timestamp.getTime()), o;
 }, archiveFromTree = async (t) => {
   const [n, s, a, i, o] = await Promise.all([
     getAccountCreationDate(t),
