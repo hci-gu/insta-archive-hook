@@ -20537,9 +20537,9 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
     const d = s.children[1];
     d && (i = d.children[0].children[1].children[0].data);
   }
-  const l = n.children[c ? 2 : 1];
+  const l = s.children[c ? 2 : 1];
   if (l) {
-    const d = l.children[0].children[1].children[0].data;
+    const d = l.children[0].children[1].children[0];
     o = new Date(d.data);
   }
   return { username: i, timestamp: o, content: a };

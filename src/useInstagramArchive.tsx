@@ -124,9 +124,9 @@ const commentFromElement = (el: Element) => {
       username = usernameEl.children[0].children[1].children[0].data
     }
   }
-  const timestampEl = table.children[usernameExists ? 2 : 1] as any
+  const timestampEl = tbody.children[usernameExists ? 2 : 1] as any
   if (timestampEl) {
-    const nestedChild = timestampEl.children[0].children[1].children[0].data
+    const nestedChild = timestampEl.children[0].children[1].children[0]
     timestamp = new Date(nestedChild.data)
   }
 
