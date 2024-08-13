@@ -20502,18 +20502,21 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
     };
   } catch {
   }
+}, extractTimestamp = (t) => {
+  let s = new Date(t).getTime(), a = -8 * 60 * 60 * 1e3, o = 2 * 60 * 60 * 1e3 - a;
+  return new Date(s + o);
 }, getAccountCreationDate = async (t) => {
   let s = (await htmlForPath(
     t,
     'security_and_login_information.login_and_account_creation["signup_information.html"]'
   ))("table").text();
-  return s = s.replace("Time", ""), new Date(s);
+  return s = s.replace("Time", ""), extractTimestamp(s);
 }, captionAndTimeStampFromElement = (t) => {
   let n = "", s;
   const a = t.children[0];
   a && (n = a.children[0].data);
   const i = t.children[2];
-  return i && (s = new Date(i.children[0].data)), { caption: n, timestamp: s };
+  return i && (s = extractTimestamp(i.children[0].data)), { caption: n, timestamp: s };
 }, usernameAndTimestampFromElement = (t) => {
   let n = "", s;
   const a = t.children[0];
@@ -20521,7 +20524,7 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
   const i = t.children[1];
   if (i) {
     const o = i.children[0].children[1].children[0];
-    s = new Date(o.data);
+    s = extractTimestamp(o.data);
   }
   return { username: n, timestamp: s };
 }, usernameAndTimestampFromStoryLikeElement = (t) => {
@@ -20531,7 +20534,7 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
   const i = t.children[1];
   if (i) {
     const o = i.children[0].children[0].children[0];
-    s = new Date(o.data);
+    s = extractTimestamp(o.data);
   }
   return { username: n, timestamp: s };
 }, commentFromElement = (t) => {
@@ -20550,7 +20553,7 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
   const l = s.children[c ? 2 : 1];
   if (l) {
     const d = l.children[0].children[1].children[0];
-    o = new Date(d.data);
+    o = extractTimestamp(d.data);
   }
   return { username: i, timestamp: o, content: a };
 }, postElementToPost = async (t, n) => {

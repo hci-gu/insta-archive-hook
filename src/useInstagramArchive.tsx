@@ -58,6 +58,20 @@ type UseInstagramArchiveReturn = [
   (file: File) => void
 ]
 
+const extractTimestamp = (dateString: string) => {
+  const pstDate = new Date(dateString)
+
+  let pstTime = pstDate.getTime()
+
+  // Step 3: Calculate the offset between PST and GMT+2 in milliseconds
+  let pstOffset = -8 * 60 * 60 * 1000 // PST is UTC-8
+  let gmtPlus2Offset = 2 * 60 * 60 * 1000 // GMT+2 is UTC+2
+  let offsetDifference = gmtPlus2Offset - pstOffset
+
+  // Step 4: Create a new Date object adjusted to GMT+2
+  return new Date(pstTime + offsetDifference)
+}
+
 const getAccountCreationDate = async (tree: any): Promise<Date> => {
   const $html = await htmlForPath(
     tree,
@@ -65,7 +79,7 @@ const getAccountCreationDate = async (tree: any): Promise<Date> => {
   )
   let text = $html('table').text()
   text = text.replace('Time', '')
-  return new Date(text)
+  return extractTimestamp(text)
 }
 
 const captionAndTimeStampFromElement = (el: Element) => {
@@ -77,7 +91,7 @@ const captionAndTimeStampFromElement = (el: Element) => {
   }
   const timestampEl = el.children[2] as any
   if (timestampEl) {
-    timestamp = new Date(timestampEl.children[0].data)
+    timestamp = extractTimestamp(timestampEl.children[0].data)
   }
 
   return { caption, timestamp }
@@ -93,7 +107,7 @@ const usernameAndTimestampFromElement = (el: Element) => {
   const timestampEl = el.children[1] as any
   if (timestampEl) {
     const nestedChild = timestampEl.children[0].children[1].children[0]
-    timestamp = new Date(nestedChild.data)
+    timestamp = extractTimestamp(nestedChild.data)
   }
 
   return { username, timestamp }
@@ -109,7 +123,7 @@ const usernameAndTimestampFromStoryLikeElement = (el: Element) => {
   const timestampEl = el.children[1] as any
   if (timestampEl) {
     const nestedChild = timestampEl.children[0].children[0].children[0]
-    timestamp = new Date(nestedChild.data)
+    timestamp = extractTimestamp(nestedChild.data)
   }
 
   return { username, timestamp }
@@ -143,7 +157,7 @@ const commentFromElement = (el: Element) => {
   const timestampEl = tbody.children[usernameExists ? 2 : 1] as any
   if (timestampEl) {
     const nestedChild = timestampEl.children[0].children[1].children[0]
-    timestamp = new Date(nestedChild.data)
+    timestamp = extractTimestamp(nestedChild.data)
   }
 
   return { username, timestamp, content }
