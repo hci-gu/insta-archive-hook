@@ -20556,6 +20556,10 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
     o = extractTimestamp(d.data);
   }
   return { username: i, timestamp: o, content: a };
+}, directMessageFromElement = (t) => {
+  const n = t.children[0], s = t.children[2];
+  let a = "", i = /* @__PURE__ */ new Date();
+  return n && (a = n.children[0].data), s && (i = extractTimestamp(s.children[0].data)), { sender: a, timestamp: i };
 }, postElementToPost = async (t, n) => {
   const { caption: s, timestamp: a } = captionAndTimeStampFromElement(n);
   if (!a || !s)
@@ -20609,29 +20613,30 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
     n(".uiBoxWhite").toArray().map((i) => storyElementToStory(t, i))
   )).filter((i) => i !== null);
 }, profilefromTree = async (t) => {
-  var u;
+  var c;
   const n = await htmlForPath(
     t,
     'personal_information.personal_information["personal_information.html"]'
   );
-  let s = "", a = [];
-  const i = n("tr").toArray();
-  for (const c of i) {
-    const d = n(c).find("td").text();
-    d.includes("Username") && (s = d.replace("Username", ""));
+  let s = "", a = "", i = [];
+  const o = n("tr").toArray();
+  for (const l of o) {
+    const f = n(l).find("td").text();
+    f.includes("Username") && (s = f.replace("Username", "")), f.includes("Name") && (a = f.replace("Name", ""));
   }
-  const o = n("a > img").toArray();
-  for (const c of o) {
-    const l = c.attribs.src;
-    l && a.push({
+  const u = n("a > img").toArray();
+  for (const l of u) {
+    const d = l.attribs.src;
+    d && i.push({
       timestamp: /* @__PURE__ */ new Date(0),
-      media: ((u = await mediaForPath(t, l)) == null ? void 0 : u.url) ?? ""
+      media: ((c = await mediaForPath(t, d)) == null ? void 0 : c.url) ?? ""
     });
   }
   return {
-    profilePictures: a,
+    profilePictures: i,
     bio: [],
-    username: s
+    username: s,
+    name: a
   };
 }, likedPostsFromTree = async (t) => (await htmlForPath(
   t,
@@ -20689,6 +20694,26 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
     s = s.concat(o);
   }
   return s;
+}, directMessagesFromTree = async (t, n) => {
+  const s = t.your_instagram_activity.messages.inbox;
+  let a = [];
+  for (const i in s) {
+    if (!s[i]["message_1.html"])
+      continue;
+    const u = await htmlForPath(
+      t,
+      `your_instagram_activity.messages.inbox["${i}"]["message_1.html"]`
+    ), c = i.split("_")[0], l = u(".uiBoxWhite").toArray().map((d) => {
+      const f = directMessageFromElement(d), h = n === f.sender ? c : n;
+      return {
+        timestamp: f.timestamp,
+        sender: f.sender,
+        recipient: h
+      };
+    });
+    a = a.concat(l);
+  }
+  return a.sort((i, o) => o.timestamp.getTime() - i.timestamp.getTime()), a;
 }, interactionsFromTree = async (t) => {
   const [n, s, a, i] = await Promise.all(
     [
@@ -20705,18 +20730,19 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
   ].filter((u) => u.timestamp);
   return o.sort((u, c) => c.timestamp.getTime() - u.timestamp.getTime()), o;
 }, archiveFromTree = async (t) => {
-  const [n, s, a, i, o] = await Promise.all([
+  const n = await profilefromTree(t), [s, a, i, o, u] = await Promise.all([
     getAccountCreationDate(t),
     postsFromTree(t),
     storiesFromTree(t),
-    profilefromTree(t),
+    directMessagesFromTree(t, n.name),
     interactionsFromTree(t)
-  ]), u = [...s, ...a];
-  return u.sort((c, l) => l.timestamp.getTime() - c.timestamp.getTime()), {
-    startDate: n,
-    profile: i,
-    interactions: o,
-    activities: u
+  ]), c = [...a, ...i];
+  return c.sort((l, d) => d.timestamp.getTime() - l.timestamp.getTime()), {
+    startDate: s,
+    profile: n,
+    interactions: u,
+    activities: c,
+    directMessages: o
   };
 };
 function useInstagramArchive() {

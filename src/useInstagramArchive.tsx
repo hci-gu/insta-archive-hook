@@ -34,6 +34,13 @@ type Interaction = {
   content?: string
 }
 
+type DirectMessage = {
+  sender: string
+  recipient: string
+  timestamp: Date
+  // content: string
+}
+
 type Profile = {
   profilePictures: {
     timestamp: Date
@@ -44,6 +51,7 @@ type Profile = {
     text: string
   }[]
   username: string
+  name: string
 }
 
 export type InstagramArchive = {
@@ -51,6 +59,7 @@ export type InstagramArchive = {
   profile: Profile
   activities: Activity[]
   interactions: Interaction[]
+  directMessages: DirectMessage[]
 }
 
 type UseInstagramArchiveReturn = [
@@ -163,6 +172,24 @@ const commentFromElement = (el: Element) => {
   return { username, timestamp, content }
 }
 
+const directMessageFromElement = (el: Element) => {
+  const senderElement = el.children[0] as any
+  const timestampElement = el.children[2] as any
+
+  let sender = ''
+  let timestamp = new Date()
+
+  if (senderElement) {
+    sender = senderElement.children[0].data
+  }
+
+  if (timestampElement) {
+    timestamp = extractTimestamp(timestampElement.children[0].data)
+  }
+
+  return { sender, timestamp }
+}
+
 const postElementToPost = async (
   fileTree: any,
   el: Element
@@ -263,6 +290,7 @@ const profilefromTree = async (tree: any): Promise<Profile> => {
     'personal_information.personal_information["personal_information.html"]'
   )
   let username = ''
+  let name = ''
   let profilePictures = []
   const trs = $html('tr').toArray()
   for (const tr of trs) {
@@ -271,6 +299,9 @@ const profilefromTree = async (tree: any): Promise<Profile> => {
     // check if td_text contains username
     if (td_text.includes('Username')) {
       username = td_text.replace('Username', '')
+    }
+    if (td_text.includes('Name')) {
+      name = td_text.replace('Name', '')
     }
   }
 
@@ -290,6 +321,7 @@ const profilefromTree = async (tree: any): Promise<Profile> => {
     profilePictures,
     bio: [],
     username,
+    name,
   }
 }
 
@@ -354,11 +386,6 @@ const likedCommentsFromTree = async (tree: any): Promise<Interaction[]> => {
   return likedComments
 }
 
-// const commentsForHtmlPath = async (
-//   tree: any,
-//   path: string
-// ): Promise<Interaction[]> => {}
-
 const commentsFromTree = async (tree: any): Promise<Interaction[]> => {
   const commentsObj = tree['your_instagram_activity']['comments']
   let comments: Interaction[] = []
@@ -391,6 +418,46 @@ const commentsFromTree = async (tree: any): Promise<Interaction[]> => {
   return comments
 }
 
+const directMessagesFromTree = async (
+  tree: any,
+  name: string
+): Promise<DirectMessage[]> => {
+  const inbox = tree['your_instagram_activity']['messages']['inbox']
+
+  let dms: DirectMessage[] = []
+  for (const key in inbox) {
+    const messagesWithUser = inbox[key]
+    if (!messagesWithUser['message_1.html']) {
+      continue
+    }
+
+    const $html = await htmlForPath(
+      tree,
+      `your_instagram_activity.messages.inbox["${key}"]["message_1.html"]`
+    )
+    const username = key.split('_')[0]
+
+    const _dms = $html('.uiBoxWhite')
+      .toArray()
+      .map((el) => {
+        const directMessageData = directMessageFromElement(el)
+        const recipient = name === directMessageData.sender ? username : name
+
+        return {
+          timestamp: directMessageData.timestamp,
+          sender: directMessageData.sender,
+          recipient,
+        }
+      })
+
+    dms = dms.concat(_dms)
+  }
+
+  dms.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+
+  return dms
+}
+
 const interactionsFromTree = async (tree: any): Promise<Interaction[]> => {
   const [likedPosts, likedStories, likedComments, comments] = await Promise.all(
     [
@@ -413,13 +480,16 @@ const interactionsFromTree = async (tree: any): Promise<Interaction[]> => {
 }
 
 const archiveFromTree = async (tree: any): Promise<InstagramArchive> => {
-  const [startDate, posts, stories, profile, interactions] = await Promise.all([
-    getAccountCreationDate(tree),
-    postsFromTree(tree),
-    storiesFromTree(tree),
-    profilefromTree(tree),
-    interactionsFromTree(tree),
-  ])
+  const profile = await profilefromTree(tree)
+
+  const [startDate, posts, stories, directMessages, interactions] =
+    await Promise.all([
+      getAccountCreationDate(tree),
+      postsFromTree(tree),
+      storiesFromTree(tree),
+      directMessagesFromTree(tree, profile.name),
+      interactionsFromTree(tree),
+    ])
   const activities = [...posts, ...stories]
   activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 
@@ -429,6 +499,7 @@ const archiveFromTree = async (tree: any): Promise<InstagramArchive> => {
     profile,
     interactions,
     activities,
+    directMessages,
   }
 }
 
