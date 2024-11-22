@@ -20600,7 +20600,8 @@ const extractTimestamp = (t) => {
     }
     const l = s.children[c ? 2 : 1];
     if (l) {
-      const d = l.children[0].children[1].children[0];
+      console.log(l);
+      const d = l.children[1].children[0];
       o = extractTimestamp(d.data);
     }
     return { username: i, timestamp: o, content: a };
