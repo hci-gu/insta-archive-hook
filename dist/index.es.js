@@ -20673,7 +20673,7 @@ const extractTimestamp = (t) => {
   const o = n("tr").toArray();
   for (const l of o) {
     const f = n(l).find("td").text();
-    f.includes("Username") && (s = f.replace("Username", "")), f.includes("Name") && (a = f.replace("Name", ""));
+    f.includes("Username") && (s = f.replace("Username", "")), f.includes("Användarnamn") && (s = f.replace("Användarnamn", "")), f.includes("Name") && (a = f.replace("Name", "")), f.includes("Namn") && (a = f.replace("Namn", ""));
   }
   const u = n("a > img").toArray();
   for (const l of u) {
@@ -20745,25 +20745,25 @@ const extractTimestamp = (t) => {
     s = s.concat(o);
   }
   return s;
-}, directMessagesFromTree = async (t) => {
-  const n = t.your_instagram_activity.messages.inbox;
-  let s = [];
-  for (const a in n) {
-    if (!n[a]["message_1.html"])
+}, directMessagesFromTree = async (t, n) => {
+  const s = t.your_instagram_activity.messages.inbox;
+  let a = [];
+  for (const i in s) {
+    if (!s[i]["message_1.html"])
       continue;
-    const o = await htmlForPath(
+    const c = (await htmlForPath(
       t,
-      `your_instagram_activity.messages.inbox["${a}"]["message_1.html"]`
-    ), u = a.split("_")[0], c = o(".uiBoxWhite").toArray().map((l) => {
-      const d = directMessageFromElement(l), f = d.sender !== u;
+      `your_instagram_activity.messages.inbox["${i}"]["message_1.html"]`
+    ))(".uiBoxWhite").toArray().map((l) => {
+      const d = directMessageFromElement(l), f = d.sender === n;
       return {
         timestamp: d.timestamp,
         sentByMe: f
       };
     });
-    s = s.concat(c);
+    a = a.concat(c);
   }
-  return s.sort((a, i) => i.timestamp.getTime() - a.timestamp.getTime()), s;
+  return a.sort((i, o) => o.timestamp.getTime() - i.timestamp.getTime()), a;
 }, interactionsFromTree = async (t) => {
   const [n, s, a, i] = await Promise.all(
     [
@@ -20780,11 +20780,13 @@ const extractTimestamp = (t) => {
   ].filter((u) => u.timestamp);
   return o.sort((u, c) => c.timestamp.getTime() - u.timestamp.getTime()), o;
 }, archiveFromTree = async (t) => {
-  const n = await profilefromTree(t), [s, a, i, o, u] = await Promise.all([
+  const n = await profilefromTree(t);
+  console.log(n);
+  const [s, a, i, o, u] = await Promise.all([
     getAccountCreationDate(t),
     postsFromTree(t),
     storiesFromTree(t),
-    directMessagesFromTree(t),
+    directMessagesFromTree(t, n.name),
     interactionsFromTree(t)
   ]), c = [...a, ...i];
   return c.sort((l, d) => d.timestamp.getTime() - l.timestamp.getTime()), {

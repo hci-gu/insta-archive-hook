@@ -372,8 +372,14 @@ const profilefromTree = async (tree: any): Promise<Profile> => {
     if (td_text.includes('Username')) {
       username = td_text.replace('Username', '')
     }
+    if (td_text.includes('Användarnamn')) {
+      username = td_text.replace('Användarnamn', '')
+    }
     if (td_text.includes('Name')) {
       name = td_text.replace('Name', '')
+    }
+    if (td_text.includes('Namn')) {
+      name = td_text.replace('Namn', '')
     }
   }
 
@@ -490,7 +496,10 @@ const commentsFromTree = async (tree: any): Promise<Interaction[]> => {
   return comments
 }
 
-const directMessagesFromTree = async (tree: any): Promise<DirectMessage[]> => {
+const directMessagesFromTree = async (
+  tree: any,
+  name: string
+): Promise<DirectMessage[]> => {
   const inbox = tree['your_instagram_activity']['messages']['inbox']
 
   let dms: DirectMessage[] = []
@@ -504,13 +513,13 @@ const directMessagesFromTree = async (tree: any): Promise<DirectMessage[]> => {
       tree,
       `your_instagram_activity.messages.inbox["${key}"]["message_1.html"]`
     )
-    const username = key.split('_')[0]
+    // const username = key.split('_')[0]
 
     const _dms = $html('.uiBoxWhite')
       .toArray()
       .map((el) => {
         const directMessageData = directMessageFromElement(el)
-        const sentByMe = directMessageData.sender !== username
+        const sentByMe = directMessageData.sender === name
 
         return {
           timestamp: directMessageData.timestamp,
@@ -549,13 +558,14 @@ const interactionsFromTree = async (tree: any): Promise<Interaction[]> => {
 
 const archiveFromTree = async (tree: any): Promise<InstagramArchive> => {
   const profile = await profilefromTree(tree)
+  console.log(profile)
 
   const [startDate, posts, stories, directMessages, interactions] =
     await Promise.all([
       getAccountCreationDate(tree),
       postsFromTree(tree),
       storiesFromTree(tree),
-      directMessagesFromTree(tree),
+      directMessagesFromTree(tree, profile.name),
       interactionsFromTree(tree),
     ])
   const activities = [...posts, ...stories]

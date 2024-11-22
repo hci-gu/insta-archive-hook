@@ -6,10 +6,16 @@ import useInstagramArchive from './useInstagramArchive'
 const Displayer = ({ archive }: { archive: any }) => {
   // const parts = archive?.activities.filter((a) => a.type === 'Story')
 
+  const debug = {
+    dms: archive?.directMessages.length,
+    sentByMe: archive?.directMessages.filter((dm: any) => dm.sentByMe).length,
+    received: archive?.directMessages.filter((dm: any) => !dm.sentByMe).length,
+  }
+
   return (
     <Flex direction="column">
       <h2>Archive</h2>
-      <pre key={`${archive}`}>{JSON.stringify(archive, null, 2)}</pre>
+      <pre key={`${archive}`}>{JSON.stringify(debug, null, 2)}</pre>
     </Flex>
   )
 }
