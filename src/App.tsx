@@ -10,6 +10,8 @@ const Displayer = ({ archive }: { archive: any }) => {
     dms: archive?.directMessages.length,
     sentByMe: archive?.directMessages.filter((dm: any) => dm.sentByMe).length,
     received: archive?.directMessages.filter((dm: any) => !dm.sentByMe).length,
+    comments: archive?.interactions.filter((o: any) => o.type == 'Comment')
+      .length,
   }
 
   return (

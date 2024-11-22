@@ -234,7 +234,8 @@ const commentFromElement = (el: Element) => {
     }
     const timestampEl = tbody.children[usernameExists ? 2 : 1] as any
     if (timestampEl) {
-      const nestedChild = timestampEl.children[0].children[1].children[0]
+      console.log(timestampEl)
+      const nestedChild = timestampEl.children[1].children[0]
       timestamp = extractTimestamp(nestedChild.data)
     }
 
@@ -477,6 +478,7 @@ const commentsFromTree = async (tree: any): Promise<Interaction[]> => {
         .toArray()
         .map((el) => {
           const commentData = commentFromElement(el)
+
           if (!commentData) {
             return null
           }
