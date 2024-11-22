@@ -20506,11 +20506,15 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
   let s = new Date(t).getTime(), a = -8 * 60 * 60 * 1e3, o = 2 * 60 * 60 * 1e3 - a;
   return new Date(s + o);
 }, getAccountCreationDate = async (t) => {
-  let s = (await htmlForPath(
-    t,
-    'security_and_login_information.login_and_account_creation["signup_information.html"]'
-  ))("table").text();
-  return s = s.replace("Time", ""), extractTimestamp(s);
+  try {
+    let s = (await htmlForPath(
+      t,
+      'security_and_login_information.login_and_account_creation["signup_information.html"]'
+    ))("table").text();
+    return s = s.replace("Time", ""), extractTimestamp(s);
+  } catch {
+    return /* @__PURE__ */ new Date(0);
+  }
 }, captionAndTimeStampFromElement = (t) => {
   let n = "", s;
   const a = t.children[0];
@@ -20538,24 +20542,28 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
   }
   return { username: n, timestamp: s };
 }, commentFromElement = (t) => {
-  const n = t.children[0].children[1];
-  if (!n)
+  try {
+    const n = t.children[0].children[1];
+    if (!n)
+      return null;
+    const s = n.children[0];
+    let a = "", i = "", o = /* @__PURE__ */ new Date();
+    const u = s.children[0];
+    u && (a = u.children[0].children[1].children[0].children[0].data);
+    let c = s.children.length === 3;
+    if (c) {
+      const d = s.children[1];
+      d && (i = d.children[0].children[1].children[0].data);
+    }
+    const l = s.children[c ? 2 : 1];
+    if (l) {
+      const d = l.children[0].children[1].children[0];
+      o = extractTimestamp(d.data);
+    }
+    return { username: i, timestamp: o, content: a };
+  } catch {
     return null;
-  const s = n.children[0];
-  let a = "", i = "", o = /* @__PURE__ */ new Date();
-  const u = s.children[0];
-  u && (a = u.children[0].children[1].children[0].children[0].data);
-  let c = s.children.length === 3;
-  if (c) {
-    const d = s.children[1];
-    d && (i = d.children[0].children[1].children[0].data);
   }
-  const l = s.children[c ? 2 : 1];
-  if (l) {
-    const d = l.children[0].children[1].children[0];
-    o = extractTimestamp(d.data);
-  }
-  return { username: i, timestamp: o, content: a };
 }, directMessageFromElement = (t) => {
   const n = t.children[0], s = t.children[2];
   let a = "", i = /* @__PURE__ */ new Date();

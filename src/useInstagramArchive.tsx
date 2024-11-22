@@ -82,13 +82,17 @@ const extractTimestamp = (dateString: string) => {
 }
 
 const getAccountCreationDate = async (tree: any): Promise<Date> => {
-  const $html = await htmlForPath(
-    tree,
-    'security_and_login_information.login_and_account_creation["signup_information.html"]'
-  )
-  let text = $html('table').text()
-  text = text.replace('Time', '')
-  return extractTimestamp(text)
+  try {
+    const $html = await htmlForPath(
+      tree,
+      'security_and_login_information.login_and_account_creation["signup_information.html"]'
+    )
+    let text = $html('table').text()
+    text = text.replace('Time', '')
+    return extractTimestamp(text)
+  } catch (_) {
+    return new Date(0)
+  }
 }
 
 const captionAndTimeStampFromElement = (el: Element) => {
@@ -139,37 +143,41 @@ const usernameAndTimestampFromStoryLikeElement = (el: Element) => {
 }
 
 const commentFromElement = (el: Element) => {
-  const table = (el.children[0] as Element).children[1] as Element
+  try {
+    const table = (el.children[0] as Element).children[1] as Element
 
-  if (!table) {
+    if (!table) {
+      return null
+    }
+
+    const tbody = table.children[0] as Element
+
+    let content = ''
+    let username = ''
+    let timestamp = new Date()
+    const contentEl = tbody.children[0] as any
+    if (contentEl) {
+      content = contentEl.children[0].children[1].children[0].children[0].data
+    }
+
+    let usernameExists = tbody.children.length === 3
+
+    if (usernameExists) {
+      const usernameEl = tbody.children[1] as any
+      if (usernameEl) {
+        username = usernameEl.children[0].children[1].children[0].data
+      }
+    }
+    const timestampEl = tbody.children[usernameExists ? 2 : 1] as any
+    if (timestampEl) {
+      const nestedChild = timestampEl.children[0].children[1].children[0]
+      timestamp = extractTimestamp(nestedChild.data)
+    }
+
+    return { username, timestamp, content }
+  } catch (_) {
     return null
   }
-
-  const tbody = table.children[0] as Element
-
-  let content = ''
-  let username = ''
-  let timestamp = new Date()
-  const contentEl = tbody.children[0] as any
-  if (contentEl) {
-    content = contentEl.children[0].children[1].children[0].children[0].data
-  }
-
-  let usernameExists = tbody.children.length === 3
-
-  if (usernameExists) {
-    const usernameEl = tbody.children[1] as any
-    if (usernameEl) {
-      username = usernameEl.children[0].children[1].children[0].data
-    }
-  }
-  const timestampEl = tbody.children[usernameExists ? 2 : 1] as any
-  if (timestampEl) {
-    const nestedChild = timestampEl.children[0].children[1].children[0]
-    timestamp = extractTimestamp(nestedChild.data)
-  }
-
-  return { username, timestamp, content }
 }
 
 const directMessageFromElement = (el: Element) => {
