@@ -68,6 +68,9 @@ type UseInstagramArchiveReturn = [
 ]
 
 const extractTimestamp = (dateString: string) => {
+  dateString = dateString.replace('em', 'PM')
+  dateString = dateString.replace('fm', 'AM')
+
   const pstDate = new Date(dateString)
 
   let pstTime = pstDate.getTime()

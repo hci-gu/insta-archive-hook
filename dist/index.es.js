@@ -20503,6 +20503,7 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
   } catch {
   }
 }, extractTimestamp = (t) => {
+  t = t.replace("em", "PM"), t = t.replace("fm", "AM");
   let s = new Date(t).getTime(), a = -8 * 60 * 60 * 1e3, o = 2 * 60 * 60 * 1e3 - a;
   return new Date(s + o);
 }, getAccountCreationDate = async (t) => {
