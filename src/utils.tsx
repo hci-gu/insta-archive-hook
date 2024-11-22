@@ -88,7 +88,3 @@ export const mediaForPath = async (fileTree: any, path: string) => {
     }
   } catch (e) {}
 }
-
-// export const videoForPath = async (fileTree: any, path: string) => {
-
-// }

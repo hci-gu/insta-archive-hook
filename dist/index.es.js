@@ -20745,26 +20745,25 @@ const extractTimestamp = (t) => {
     s = s.concat(o);
   }
   return s;
-}, directMessagesFromTree = async (t, n) => {
-  const s = t.your_instagram_activity.messages.inbox;
-  let a = [];
-  for (const i in s) {
-    if (!s[i]["message_1.html"])
+}, directMessagesFromTree = async (t) => {
+  const n = t.your_instagram_activity.messages.inbox;
+  let s = [];
+  for (const a in n) {
+    if (!n[a]["message_1.html"])
       continue;
-    const u = await htmlForPath(
+    const o = await htmlForPath(
       t,
-      `your_instagram_activity.messages.inbox["${i}"]["message_1.html"]`
-    ), c = i.split("_")[0], l = u(".uiBoxWhite").toArray().map((d) => {
-      const f = directMessageFromElement(d), h = n === f.sender ? c : n;
+      `your_instagram_activity.messages.inbox["${a}"]["message_1.html"]`
+    ), u = a.split("_")[0], c = o(".uiBoxWhite").toArray().map((l) => {
+      const d = directMessageFromElement(l), f = d.sender !== u;
       return {
-        timestamp: f.timestamp,
-        sender: f.sender,
-        recipient: h
+        timestamp: d.timestamp,
+        sentByMe: f
       };
     });
-    a = a.concat(l);
+    s = s.concat(c);
   }
-  return a.sort((i, o) => o.timestamp.getTime() - i.timestamp.getTime()), a;
+  return s.sort((a, i) => i.timestamp.getTime() - a.timestamp.getTime()), s;
 }, interactionsFromTree = async (t) => {
   const [n, s, a, i] = await Promise.all(
     [
@@ -20785,7 +20784,7 @@ const extractTimestamp = (t) => {
     getAccountCreationDate(t),
     postsFromTree(t),
     storiesFromTree(t),
-    directMessagesFromTree(t, n.name),
+    directMessagesFromTree(t),
     interactionsFromTree(t)
   ]), c = [...a, ...i];
   return c.sort((l, d) => d.timestamp.getTime() - l.timestamp.getTime()), {
@@ -20805,7 +20804,24 @@ function useInstagramArchive() {
     });
   }, [t, a]), [s, n];
 }
+function stripArchive(t) {
+  return t ? {
+    startDate: t.startDate,
+    activities: t.activities.slice(0, 5).map((n) => ({
+      timestamp: n.timestamp,
+      type: n.type
+    })),
+    interactions: t.interactions.slice(0, 5).map((n) => ({
+      timestamp: n.timestamp,
+      type: n.type
+    })),
+    directMessages: t.directMessages.slice(0, 500).map((n) => ({
+      ...n
+    }))
+  } : {};
+}
 export {
   UploadInstagramArchive,
+  stripArchive,
   useInstagramArchive
 };

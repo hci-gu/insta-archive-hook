@@ -35,10 +35,8 @@ type Interaction = {
 }
 
 type DirectMessage = {
-  sender: string
-  recipient: string
+  sentByMe: boolean
   timestamp: Date
-  // content: string
 }
 
 type Profile = {
@@ -492,10 +490,7 @@ const commentsFromTree = async (tree: any): Promise<Interaction[]> => {
   return comments
 }
 
-const directMessagesFromTree = async (
-  tree: any,
-  name: string
-): Promise<DirectMessage[]> => {
+const directMessagesFromTree = async (tree: any): Promise<DirectMessage[]> => {
   const inbox = tree['your_instagram_activity']['messages']['inbox']
 
   let dms: DirectMessage[] = []
@@ -515,12 +510,11 @@ const directMessagesFromTree = async (
       .toArray()
       .map((el) => {
         const directMessageData = directMessageFromElement(el)
-        const recipient = name === directMessageData.sender ? username : name
+        const sentByMe = directMessageData.sender !== username
 
         return {
           timestamp: directMessageData.timestamp,
-          sender: directMessageData.sender,
-          recipient,
+          sentByMe,
         }
       })
 
@@ -561,7 +555,7 @@ const archiveFromTree = async (tree: any): Promise<InstagramArchive> => {
       getAccountCreationDate(tree),
       postsFromTree(tree),
       storiesFromTree(tree),
-      directMessagesFromTree(tree, profile.name),
+      directMessagesFromTree(tree),
       interactionsFromTree(tree),
     ])
   const activities = [...posts, ...stories]

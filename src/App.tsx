@@ -1,14 +1,16 @@
+import { Flex } from '@mantine/core'
 import UploadInstagramArchive from './UploadInstagramArchive'
-import useInstagramArchive, { InstagramArchive } from './useInstagramArchive'
+import useInstagramArchive from './useInstagramArchive'
+// import stripArchive from './stripArchive'
 
-const Displayer = ({ archive }: { archive: InstagramArchive | undefined }) => {
+const Displayer = ({ archive }: { archive: any }) => {
   // const parts = archive?.activities.filter((a) => a.type === 'Story')
 
   return (
-    <>
+    <Flex direction="column">
       <h2>Archive</h2>
       <pre key={`${archive}`}>{JSON.stringify(archive, null, 2)}</pre>
-    </>
+    </Flex>
   )
 }
 
@@ -23,7 +25,10 @@ function App() {
       }}
     >
       <UploadInstagramArchive setFile={setFile} />
-      <Displayer archive={archive} />
+      <Flex>
+        <Displayer archive={archive} />
+        {/* <Displayer archive={stripArchive(archive)} /> */}
+      </Flex>
     </div>
   )
 }
