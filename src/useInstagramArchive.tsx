@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { htmlForPath, fileTreeFromZip, mediaForPath } from './utils'
-import { Element, load } from 'cheerio'
+import { CheerioAPI, Element, load } from 'cheerio'
 
 enum ActivityType {
   Post = 'Post',
@@ -67,11 +67,54 @@ type UseInstagramArchiveReturn = [
   (file: File) => void
 ]
 
-const extractTimestamp = (dateString: string) => {
-  dateString = dateString.replace('em', 'PM')
-  dateString = dateString.replace('fm', 'AM')
+const swedishToEnglishMonths: { [key: string]: string } = {
+  jan: 'Jan',
+  feb: 'Feb',
+  mar: 'Mar',
+  apr: 'Apr',
+  maj: 'May',
+  jun: 'Jun',
+  jul: 'Jul',
+  aug: 'Aug',
+  sep: 'Sep',
+  okt: 'Oct',
+  nov: 'Nov',
+  dec: 'Dec',
+}
 
-  const pstDate = new Date(dateString)
+const swedishAmPm: { [key: string]: string } = {
+  fm: 'AM',
+  em: 'PM',
+}
+
+function normalizeDateString(dateString: string) {
+  dateString = dateString.replace('Tid', '')
+  // Replace Swedish months with English equivalents
+  let normalized = dateString.replace(
+    /\b(?:jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)\b/gi,
+    (match: any) => swedishToEnglishMonths[match.toLowerCase()]
+  )
+
+  // Replace Swedish AM/PM indicators with English equivalents
+  normalized = normalized.replace(
+    /\b(?:fm|em)\b/gi,
+    (match) => swedishAmPm[match.toLowerCase()]
+  )
+
+  // Remove any additional commas that might cause issues
+  normalized = normalized.replace(/,/g, '')
+
+  return normalized
+}
+
+const extractTimestamp = (dateString: string) => {
+  const normalizedDate = normalizeDateString(dateString)
+  const pstDate = new Date(normalizedDate)
+
+  // check if invalid date
+  if (isNaN(pstDate.getTime())) {
+    console.log('Invalid date string:', dateString)
+  }
 
   let pstTime = pstDate.getTime()
 
@@ -84,12 +127,32 @@ const extractTimestamp = (dateString: string) => {
   return new Date(pstTime + offsetDifference)
 }
 
-const getAccountCreationDate = async (tree: any): Promise<Date> => {
+const getHtmlForAccountCreation = async (
+  tree: any
+): Promise<CheerioAPI | null> => {
   try {
     const $html = await htmlForPath(
       tree,
       'security_and_login_information.login_and_account_creation["signup_information.html"]'
     )
+    return $html
+  } catch (_) {
+    const $html = await htmlForPath(
+      tree,
+      'security_and_login_information.login_and_profile_creation["instagram_signup_details.html"]'
+    )
+    return $html
+  }
+  return null
+}
+
+const getAccountCreationDate = async (tree: any): Promise<Date> => {
+  try {
+    const $html = await getHtmlForAccountCreation(tree)
+    if (!$html) {
+      return new Date(0)
+    }
+
     let text = $html('table').text()
     text = text.replace('Time', '')
     return extractTimestamp(text)

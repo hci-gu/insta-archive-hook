@@ -20502,16 +20502,58 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
     };
   } catch {
   }
-}, extractTimestamp = (t) => {
-  t = t.replace("em", "PM"), t = t.replace("fm", "AM");
-  let s = new Date(t).getTime(), a = -8 * 60 * 60 * 1e3, o = 2 * 60 * 60 * 1e3 - a;
-  return new Date(s + o);
-}, getAccountCreationDate = async (t) => {
+}, swedishToEnglishMonths = {
+  jan: "Jan",
+  feb: "Feb",
+  mar: "Mar",
+  apr: "Apr",
+  maj: "May",
+  jun: "Jun",
+  jul: "Jul",
+  aug: "Aug",
+  sep: "Sep",
+  okt: "Oct",
+  nov: "Nov",
+  dec: "Dec"
+}, swedishAmPm = {
+  fm: "AM",
+  em: "PM"
+};
+function normalizeDateString(t) {
+  t = t.replace("Tid", "");
+  let n = t.replace(
+    /\b(?:jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)\b/gi,
+    (s) => swedishToEnglishMonths[s.toLowerCase()]
+  );
+  return n = n.replace(
+    /\b(?:fm|em)\b/gi,
+    (s) => swedishAmPm[s.toLowerCase()]
+  ), n = n.replace(/,/g, ""), n;
+}
+const extractTimestamp = (t) => {
+  const n = normalizeDateString(t), s = new Date(n);
+  isNaN(s.getTime()) && console.log("Invalid date string:", t);
+  let a = s.getTime(), i = -8 * 60 * 60 * 1e3, u = 2 * 60 * 60 * 1e3 - i;
+  return new Date(a + u);
+}, getHtmlForAccountCreation = async (t) => {
   try {
-    let s = (await htmlForPath(
+    return await htmlForPath(
       t,
       'security_and_login_information.login_and_account_creation["signup_information.html"]'
-    ))("table").text();
+    );
+  } catch {
+    return await htmlForPath(
+      t,
+      'security_and_login_information.login_and_profile_creation["instagram_signup_details.html"]'
+    );
+  }
+  return null;
+}, getAccountCreationDate = async (t) => {
+  try {
+    const n = await getHtmlForAccountCreation(t);
+    if (!n)
+      return /* @__PURE__ */ new Date(0);
+    let s = n("table").text();
     return s = s.replace("Time", ""), extractTimestamp(s);
   } catch {
     return /* @__PURE__ */ new Date(0);
