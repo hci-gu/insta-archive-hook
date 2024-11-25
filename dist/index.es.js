@@ -20810,15 +20810,15 @@ function useInstagramArchive() {
 function stripArchive(t) {
   return t ? {
     startDate: t.startDate,
-    activities: t.activities.slice(0, 5).map((n) => ({
+    activities: t.activities.map((n) => ({
       timestamp: n.timestamp,
       type: n.type
     })),
-    interactions: t.interactions.slice(0, 5).map((n) => ({
+    interactions: t.interactions.map((n) => ({
       timestamp: n.timestamp,
       type: n.type
     })),
-    directMessages: t.directMessages.slice(0, 500).map((n) => ({
+    directMessages: t.directMessages.map((n) => ({
       ...n
     }))
   } : {};
