@@ -234,7 +234,6 @@ const commentFromElement = (el: Element) => {
     }
     const timestampEl = tbody.children[usernameExists ? 2 : 1] as any
     if (timestampEl) {
-      console.log(timestampEl)
       const nestedChild = timestampEl.children[1].children[0]
       timestamp = extractTimestamp(nestedChild.data)
     }
@@ -560,7 +559,6 @@ const interactionsFromTree = async (tree: any): Promise<Interaction[]> => {
 
 const archiveFromTree = async (tree: any): Promise<InstagramArchive> => {
   const profile = await profilefromTree(tree)
-  console.log(profile)
 
   const [startDate, posts, stories, directMessages, interactions] =
     await Promise.all([

@@ -20600,7 +20600,6 @@ const extractTimestamp = (t) => {
     }
     const l = s.children[c ? 2 : 1];
     if (l) {
-      console.log(l);
       const d = l.children[1].children[0];
       o = extractTimestamp(d.data);
     }
@@ -20781,9 +20780,7 @@ const extractTimestamp = (t) => {
   ].filter((u) => u.timestamp);
   return o.sort((u, c) => c.timestamp.getTime() - u.timestamp.getTime()), o;
 }, archiveFromTree = async (t) => {
-  const n = await profilefromTree(t);
-  console.log(n);
-  const [s, a, i, o, u] = await Promise.all([
+  const n = await profilefromTree(t), [s, a, i, o, u] = await Promise.all([
     getAccountCreationDate(t),
     postsFromTree(t),
     storiesFromTree(t),
