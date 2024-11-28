@@ -328,6 +328,10 @@ const postsFromTree = async (tree: any): Promise<Activity[]> => {
     'your_instagram_activity.content["posts_1.html"]'
   )
 
+  if (!$html) {
+    return []
+  }
+
   const posts = await Promise.all(
     $html('.uiBoxWhite')
       .toArray()
@@ -346,6 +350,10 @@ const storiesFromTree = async (tree: any): Promise<Activity[]> => {
     'your_instagram_activity.content["stories.html"]'
   )
 
+  if (!$html) {
+    return []
+  }
+
   const stories = await Promise.all(
     $html('.uiBoxWhite')
       .toArray()
@@ -361,6 +369,16 @@ const profilefromTree = async (tree: any): Promise<Profile> => {
     tree,
     'personal_information.personal_information["personal_information.html"]'
   )
+
+  if (!$html) {
+    return {
+      profilePictures: [],
+      bio: [],
+      username: '',
+      name: '',
+    }
+  }
+
   let username = ''
   let name = ''
   let profilePictures = []
@@ -408,6 +426,11 @@ const likedPostsFromTree = async (tree: any): Promise<Interaction[]> => {
     tree,
     'your_instagram_activity.likes["liked_posts.html"]'
   )
+
+  if (!$html) {
+    return []
+  }
+
   const likedPosts = $html('.uiBoxWhite')
     .toArray()
     .map((el) => {
@@ -428,6 +451,11 @@ const likedStoriesFromTree = async (tree: any): Promise<Interaction[]> => {
     tree,
     'your_instagram_activity.story_sticker_interactions["story_likes.html"]'
   )
+
+  if (!$html) {
+    return []
+  }
+
   const likedStories = $html('.uiBoxWhite')
     .toArray()
     .map((el) => {
@@ -449,6 +477,11 @@ const likedCommentsFromTree = async (tree: any): Promise<Interaction[]> => {
     tree,
     'your_instagram_activity.likes["liked_comments.html"]'
   )
+
+  if (!$html) {
+    return []
+  }
+
   const likedComments = $html('.uiBoxWhite')
     .toArray()
     .map((el) => {
@@ -472,6 +505,11 @@ const commentsFromTree = async (tree: any): Promise<Interaction[]> => {
       tree,
       `your_instagram_activity.comments["${key}"]`
     )
+
+    if (!$html) {
+      continue
+    }
+
     const _comments = (
       $html('.uiBoxWhite')
         .toArray()
@@ -514,7 +552,10 @@ const directMessagesFromTree = async (
       tree,
       `your_instagram_activity.messages.inbox["${key}"]["message_1.html"]`
     )
-    // const username = key.split('_')[0]
+
+    if (!$html) {
+      continue
+    }
 
     const _dms = $html('.uiBoxWhite')
       .toArray()

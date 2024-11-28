@@ -20482,8 +20482,12 @@ const ignorePathsPrefixes = ["__", "._", ".DS_Store"], shouldIgnorePath = (t) =>
   }
   return Object.keys(a).length === 1 && (a = a[Object.keys(a)[0]]), a;
 }, htmlForPath = async (fileTree, path) => {
-  const data = eval(`fileTree.${path}`), writer = new TextWriter(), html = await data.getData(writer), $html = load(html);
-  return $html;
+  try {
+    const data = eval(`fileTree.${path}`), writer = new TextWriter(), html = await data.getData(writer), $html = load(html);
+    return $html;
+  } catch (t) {
+    return console.error(`Something went wrong reading path: ${path}`), null;
+  }
 }, mediaForPath = async (t, n) => {
   try {
     const s = n.split("/");
@@ -20651,7 +20655,10 @@ const extractTimestamp = (t) => {
   const n = await htmlForPath(
     t,
     'your_instagram_activity.content["posts_1.html"]'
-  ), a = (await Promise.all(
+  );
+  if (!n)
+    return [];
+  const a = (await Promise.all(
     n(".uiBoxWhite").toArray().map((i) => postElementToPost(t, i))
   )).filter((i) => i !== null);
   return a.sort((i, o) => o.timestamp.getTime() - i.timestamp.getTime()), a;
@@ -20660,15 +20667,22 @@ const extractTimestamp = (t) => {
     t,
     'your_instagram_activity.content["stories.html"]'
   );
-  return (await Promise.all(
+  return n ? (await Promise.all(
     n(".uiBoxWhite").toArray().map((i) => storyElementToStory(t, i))
-  )).filter((i) => i !== null);
+  )).filter((i) => i !== null) : [];
 }, profilefromTree = async (t) => {
   var c;
   const n = await htmlForPath(
     t,
     'personal_information.personal_information["personal_information.html"]'
   );
+  if (!n)
+    return {
+      profilePictures: [],
+      bio: [],
+      username: "",
+      name: ""
+    };
   let s = "", a = "", i = [];
   const o = n("tr").toArray();
   for (const l of o) {
@@ -20689,50 +20703,62 @@ const extractTimestamp = (t) => {
     username: s,
     name: a
   };
-}, likedPostsFromTree = async (t) => (await htmlForPath(
-  t,
-  'your_instagram_activity.likes["liked_posts.html"]'
-))(".uiBoxWhite").toArray().map((a) => {
-  const { username: i, timestamp: o } = usernameAndTimestampFromElement(a);
-  return {
-    type: "Like",
-    timestamp: o,
-    mediaOwner: i,
-    onType: "Post"
-    /* Post */
-  };
-}), likedStoriesFromTree = async (t) => (await htmlForPath(
-  t,
-  'your_instagram_activity.story_sticker_interactions["story_likes.html"]'
-))(".uiBoxWhite").toArray().map((a) => {
-  const { username: i, timestamp: o } = usernameAndTimestampFromStoryLikeElement(a);
-  return {
-    type: "Like",
-    timestamp: o,
-    mediaOwner: i,
-    onType: "Story"
-    /* Story */
-  };
-}), likedCommentsFromTree = async (t) => (await htmlForPath(
-  t,
-  'your_instagram_activity.likes["liked_comments.html"]'
-))(".uiBoxWhite").toArray().map((a) => {
-  const { username: i, timestamp: o } = usernameAndTimestampFromElement(a);
-  return {
-    type: "Like",
-    timestamp: o,
-    mediaOwner: i,
-    onType: "Comment"
-    /* Comment */
-  };
-}), commentsFromTree = async (t) => {
+}, likedPostsFromTree = async (t) => {
+  const n = await htmlForPath(
+    t,
+    'your_instagram_activity.likes["liked_posts.html"]'
+  );
+  return n ? n(".uiBoxWhite").toArray().map((a) => {
+    const { username: i, timestamp: o } = usernameAndTimestampFromElement(a);
+    return {
+      type: "Like",
+      timestamp: o,
+      mediaOwner: i,
+      onType: "Post"
+      /* Post */
+    };
+  }) : [];
+}, likedStoriesFromTree = async (t) => {
+  const n = await htmlForPath(
+    t,
+    'your_instagram_activity.story_sticker_interactions["story_likes.html"]'
+  );
+  return n ? n(".uiBoxWhite").toArray().map((a) => {
+    const { username: i, timestamp: o } = usernameAndTimestampFromStoryLikeElement(a);
+    return {
+      type: "Like",
+      timestamp: o,
+      mediaOwner: i,
+      onType: "Story"
+      /* Story */
+    };
+  }) : [];
+}, likedCommentsFromTree = async (t) => {
+  const n = await htmlForPath(
+    t,
+    'your_instagram_activity.likes["liked_comments.html"]'
+  );
+  return n ? n(".uiBoxWhite").toArray().map((a) => {
+    const { username: i, timestamp: o } = usernameAndTimestampFromElement(a);
+    return {
+      type: "Like",
+      timestamp: o,
+      mediaOwner: i,
+      onType: "Comment"
+      /* Comment */
+    };
+  }) : [];
+}, commentsFromTree = async (t) => {
   const n = t.your_instagram_activity.comments;
   let s = [];
   for (const a in n) {
-    const o = (await htmlForPath(
+    const i = await htmlForPath(
       t,
       `your_instagram_activity.comments["${a}"]`
-    ))(".uiBoxWhite").toArray().map((u) => {
+    );
+    if (!i)
+      continue;
+    const o = i(".uiBoxWhite").toArray().map((u) => {
       const c = commentFromElement(u);
       return c ? {
         type: "Comment",
@@ -20751,10 +20777,13 @@ const extractTimestamp = (t) => {
   for (const i in s) {
     if (!s[i]["message_1.html"])
       continue;
-    const c = (await htmlForPath(
+    const u = await htmlForPath(
       t,
       `your_instagram_activity.messages.inbox["${i}"]["message_1.html"]`
-    ))(".uiBoxWhite").toArray().map((l) => {
+    );
+    if (!u)
+      continue;
+    const c = u(".uiBoxWhite").toArray().map((l) => {
       const d = directMessageFromElement(l), f = d.sender === n;
       return {
         timestamp: d.timestamp,

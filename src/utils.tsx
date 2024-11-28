@@ -47,15 +47,20 @@ export const fileTreeFromZip = async (file: File) => {
 
 // @ts-ignore
 export const htmlForPath = async (fileTree: any, path: string) => {
-  const data = eval(`fileTree.${path}`)
+  try {
+    const data = eval(`fileTree.${path}`)
 
-  // need a writer to read the data
-  const writer = new zip.TextWriter()
-  const html = await data.getData(writer)
+    // need a writer to read the data
+    const writer = new zip.TextWriter()
+    const html = await data.getData(writer)
 
-  // parse the html with cheerio
-  const $html = load(html)
-  return $html
+    // parse the html with cheerio
+    const $html = load(html)
+    return $html
+  } catch (e) {
+    console.error(`Something went wrong reading path: ${path}`)
+    return null
+  }
 }
 
 export const mediaForPath = async (fileTree: any, path: string) => {
