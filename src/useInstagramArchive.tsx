@@ -558,7 +558,19 @@ const interactionsFromTree = async (tree: any): Promise<Interaction[]> => {
 }
 
 const archiveFromTree = async (tree: any): Promise<InstagramArchive> => {
-  const profile = await profilefromTree(tree)
+  let profile
+
+  try {
+    profile = await profilefromTree(tree)
+  } catch (e) {
+    console.error('Error getting profile', e)
+    profile = {
+      profilePictures: [],
+      bio: [],
+      username: '',
+      name: '',
+    }
+  }
 
   const [startDate, posts, stories, directMessages, interactions] =
     await Promise.all([

@@ -20780,7 +20780,18 @@ const extractTimestamp = (t) => {
   ].filter((u) => u.timestamp);
   return o.sort((u, c) => c.timestamp.getTime() - u.timestamp.getTime()), o;
 }, archiveFromTree = async (t) => {
-  const n = await profilefromTree(t), [s, a, i, o, u] = await Promise.all([
+  let n;
+  try {
+    n = await profilefromTree(t);
+  } catch (l) {
+    console.error("Error getting profile", l), n = {
+      profilePictures: [],
+      bio: [],
+      username: "",
+      name: ""
+    };
+  }
+  const [s, a, i, o, u] = await Promise.all([
     getAccountCreationDate(t),
     postsFromTree(t),
     storiesFromTree(t),
