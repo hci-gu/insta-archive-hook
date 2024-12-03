@@ -20565,8 +20565,8 @@ const extractTimestamp = (t) => {
 }, captionAndTimeStampFromElement = (t) => {
   let n = "", s;
   const a = t.children[0];
-  a && (n = a.children[0].data);
-  const i = t.children[2];
+  a && (n = a.children[0].data, n || console.log(a));
+  const i = t.children.length == 2 ? t.children[1] : t.children[2];
   return i && (s = extractTimestamp(i.children[0].data)), { caption: n, timestamp: s };
 }, usernameAndTimestampFromElement = (t) => {
   let n = "", s;
@@ -20617,7 +20617,7 @@ const extractTimestamp = (t) => {
   return n && (a = n.children[0].data), s && (i = extractTimestamp(s.children[0].data)), { sender: a, timestamp: i };
 }, postElementToPost = async (t, n) => {
   const { caption: s, timestamp: a } = captionAndTimeStampFromElement(n);
-  if (!a || !s)
+  if (!a)
     return null;
   let i = [];
   const o = n.children[1];
@@ -20630,12 +20630,12 @@ const extractTimestamp = (t) => {
   return {
     type: "Post",
     timestamp: a,
-    caption: s,
+    caption: s ?? "",
     media: i
   };
 }, storyElementToStory = async (t, n) => {
   const { caption: s, timestamp: a } = captionAndTimeStampFromElement(n);
-  if (!a || !s)
+  if (!a)
     return null;
   let i = [];
   const o = n.children[1];
@@ -20648,7 +20648,7 @@ const extractTimestamp = (t) => {
   return {
     type: "Story",
     timestamp: a,
-    caption: s,
+    caption: s ?? "",
     media: i
   };
 }, postsFromTree = async (t) => {
@@ -20667,9 +20667,14 @@ const extractTimestamp = (t) => {
     t,
     'your_instagram_activity.content["stories.html"]'
   );
-  return n ? (await Promise.all(
-    n(".uiBoxWhite").toArray().map((i) => storyElementToStory(t, i))
-  )).filter((i) => i !== null) : [];
+  if (!n)
+    return [];
+  const s = n(".uiBoxWhite").toArray();
+  console.log(s);
+  const a = await Promise.all(
+    s.map((o) => storyElementToStory(t, o))
+  );
+  return console.log(a), a.filter((o) => o !== null);
 }, profilefromTree = async (t) => {
   var c;
   const n = await htmlForPath(

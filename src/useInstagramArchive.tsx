@@ -165,8 +165,12 @@ const captionAndTimeStampFromElement = (el: Element) => {
   const captionEl = el.children[0] as any
   if (captionEl) {
     caption = captionEl.children[0].data
+    if (!caption) {
+      console.log(captionEl)
+    }
   }
-  const timestampEl = el.children[2] as any
+  const timestampEl =
+    el.children.length == 2 ? el.children[1] : (el.children[2] as any)
   if (timestampEl) {
     timestamp = extractTimestamp(timestampEl.children[0].data)
   }
@@ -267,7 +271,7 @@ const postElementToPost = async (
   el: Element
 ): Promise<Activity | null> => {
   const { caption, timestamp } = captionAndTimeStampFromElement(el)
-  if (!timestamp || !caption) {
+  if (!timestamp) {
     return null
   }
 
@@ -287,7 +291,7 @@ const postElementToPost = async (
   return {
     type: ActivityType.Post,
     timestamp,
-    caption,
+    caption: caption ?? '',
     media,
   }
 }
@@ -297,7 +301,7 @@ const storyElementToStory = async (
   el: Element
 ): Promise<Activity | null> => {
   const { caption, timestamp } = captionAndTimeStampFromElement(el)
-  if (!timestamp || !caption) {
+  if (!timestamp) {
     return null
   }
 
@@ -317,7 +321,7 @@ const storyElementToStory = async (
   return {
     type: ActivityType.Story,
     timestamp,
-    caption,
+    caption: caption ?? '',
     media,
   }
 }
@@ -354,11 +358,14 @@ const storiesFromTree = async (tree: any): Promise<Activity[]> => {
     return []
   }
 
+  const storiesElements = $html('.uiBoxWhite').toArray()
+
+  console.log(storiesElements)
+
   const stories = await Promise.all(
-    $html('.uiBoxWhite')
-      .toArray()
-      .map((e) => storyElementToStory(tree, e))
+    storiesElements.map((e) => storyElementToStory(tree, e))
   )
+  console.log(stories)
   const storiesFiltered = stories.filter((p) => p !== null) as Activity[]
 
   return storiesFiltered

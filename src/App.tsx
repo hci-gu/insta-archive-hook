@@ -6,18 +6,31 @@ import useInstagramArchive from './useInstagramArchive'
 const Displayer = ({ archive }: { archive: any }) => {
   // const parts = archive?.activities.filter((a) => a.type === 'Story')
 
-  const debug = {
-    dms: archive?.directMessages.length,
-    sentByMe: archive?.directMessages.filter((dm: any) => dm.sentByMe).length,
-    received: archive?.directMessages.filter((dm: any) => !dm.sentByMe).length,
-    comments: archive?.interactions.filter((o: any) => o.type == 'Comment')
-      .length,
-  }
+  // const debug = {
+  //   dms: archive?.directMessages.length,
+  //   sentByMe: archive?.directMessages.filter((dm: any) => dm.sentByMe).length,
+  //   received: archive?.directMessages.filter((dm: any) => !dm.sentByMe).length,
+  //   comments: archive?.interactions.filter((o: any) => o.type == 'Comment')
+  //     .length,
+  // }
+
+  // console.log(archive?.activities?.length)
 
   return (
     <Flex direction="column">
       <h2>Archive</h2>
-      <pre key={`${archive}`}>{JSON.stringify(debug, null, 2)}</pre>
+      <pre key={`${archive}`}>
+        {JSON.stringify(
+          {
+            startDate: archive?.startDate,
+            activities: archive?.activities.slice(0, 2),
+            interactions: archive?.interactions.slice(0, 2),
+            directMessages: archive?.directMessages.slice(0, 2),
+          },
+          null,
+          2
+        )}
+      </pre>
     </Flex>
   )
 }
