@@ -128,19 +128,18 @@ const extractTimestamp = (dateString: string) => {
 const getHtmlForAccountCreation = async (
   tree: any
 ): Promise<CheerioAPI | null> => {
-  try {
-    const $html = await htmlForPath(
-      tree,
-      'security_and_login_information.login_and_account_creation["signup_information.html"]'
-    )
-    return $html
-  } catch (_) {
-    const $html = await htmlForPath(
-      tree,
-      'security_and_login_information.login_and_profile_creation["instagram_signup_details.html"]'
-    )
+  let $html = await htmlForPath(
+    tree,
+    'security_and_login_information.login_and_account_creation["signup_information.html"]'
+  )
+  if ($html) {
     return $html
   }
+  $html = await htmlForPath(
+    tree,
+    'security_and_login_information.login_and_profile_creation["instagram_signup_details.html"]'
+  )
+  return $html
   return null
 }
 
@@ -165,9 +164,6 @@ const captionAndTimeStampFromElement = (el: Element) => {
   const captionEl = el.children[0] as any
   if (captionEl) {
     caption = captionEl.children[0].data
-    if (!caption) {
-      console.log(captionEl)
-    }
   }
   const timestampEl =
     el.children.length == 2 ? el.children[1] : (el.children[2] as any)
@@ -276,7 +272,7 @@ const postElementToPost = async (
   }
 
   let media: any = []
-  const mediaEl = el.children[1]
+  const mediaEl = el.children.length == 2 ? el.children[0] : el.children[1]
   if (mediaEl) {
     const $ = load(mediaEl)
 
@@ -360,12 +356,9 @@ const storiesFromTree = async (tree: any): Promise<Activity[]> => {
 
   const storiesElements = $html('.uiBoxWhite').toArray()
 
-  console.log(storiesElements)
-
   const stories = await Promise.all(
     storiesElements.map((e) => storyElementToStory(tree, e))
   )
-  console.log(stories)
   const storiesFiltered = stories.filter((p) => p !== null) as Activity[]
 
   return storiesFiltered

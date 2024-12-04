@@ -20540,18 +20540,14 @@ const extractTimestamp = (t) => {
   let a = s.getTime(), i = -8 * 60 * 60 * 1e3, u = 2 * 60 * 60 * 1e3 - i;
   return new Date(a + u);
 }, getHtmlForAccountCreation = async (t) => {
-  try {
-    return await htmlForPath(
-      t,
-      'security_and_login_information.login_and_account_creation["signup_information.html"]'
-    );
-  } catch {
-    return await htmlForPath(
-      t,
-      'security_and_login_information.login_and_profile_creation["instagram_signup_details.html"]'
-    );
-  }
-  return null;
+  let n = await htmlForPath(
+    t,
+    'security_and_login_information.login_and_account_creation["signup_information.html"]'
+  );
+  return n || (n = await htmlForPath(
+    t,
+    'security_and_login_information.login_and_profile_creation["instagram_signup_details.html"]'
+  ), n);
 }, getAccountCreationDate = async (t) => {
   try {
     const n = await getHtmlForAccountCreation(t);
@@ -20565,7 +20561,7 @@ const extractTimestamp = (t) => {
 }, captionAndTimeStampFromElement = (t) => {
   let n = "", s;
   const a = t.children[0];
-  a && (n = a.children[0].data, n || console.log(a));
+  a && (n = a.children[0].data);
   const i = t.children.length == 2 ? t.children[1] : t.children[2];
   return i && (s = extractTimestamp(i.children[0].data)), { caption: n, timestamp: s };
 }, usernameAndTimestampFromElement = (t) => {
@@ -20620,7 +20616,7 @@ const extractTimestamp = (t) => {
   if (!a)
     return null;
   let i = [];
-  const o = n.children[1];
+  const o = n.children.length == 2 ? n.children[0] : n.children[1];
   if (o) {
     const u = load(o);
     i = await Promise.all(
@@ -20670,11 +20666,9 @@ const extractTimestamp = (t) => {
   if (!n)
     return [];
   const s = n(".uiBoxWhite").toArray();
-  console.log(s);
-  const a = await Promise.all(
+  return (await Promise.all(
     s.map((o) => storyElementToStory(t, o))
-  );
-  return console.log(a), a.filter((o) => o !== null);
+  )).filter((o) => o !== null);
 }, profilefromTree = async (t) => {
   var c;
   const n = await htmlForPath(
